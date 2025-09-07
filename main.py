@@ -20,10 +20,8 @@ def hello_index():
 @app.get("/hello/")
 def hello(name: str = " World"):
     name = name.strip().title()
-    return {
-        "message": f"Hello {name}"
-    }
+    return {"message": f"Hello {name}"}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
