@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import db_helper
-from . import crud
-from .schemas import Product, ProductCreate
+from . import crud, dependencies
+from .schemas import Product, ProductCreate, ProductUpdate, ProductUpdatePartial
 
 router = APIRouter(tags=["Products"])
 
@@ -25,18 +25,42 @@ async def create_product(
 
 
 @router.get("/{product_id}/", response_model=Product)
-async def get_product(
-    product_id: int,
+async def get_product(product: Product = Depends(dependencies.get_product_by_id)):
+    return product
+
+
+@router.put("/{product_id}/", response_model=Product)
+async def update_product(
+    product_update: ProductUpdate,
+    product: Product = Depends(dependencies.get_product_by_id),
     session: AsyncSession = Depends(db_helper.session_dependency),
 ):
-    product = await crud.get_product(
+
+    return await crud.update_product(
         session=session,
-        product_id=product_id,
+        product=product,
+        product_update=product_update,
     )
-    if product is not None:
-        return product
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with id: {product_id} does not exist!",
-        )
+
+
+@router.patch("/{product_id}/", response_model=Product)
+async def update_product_partial(
+    product_update: ProductUpdatePartial,
+    product: Product = Depends(dependencies.get_product_by_id),
+    session: AsyncSession = Depends(db_helper.session_dependency),
+):
+
+    return await crud.update_product(
+        session=session,
+        product=product,
+        product_update=product_update,
+        partial=True,
+    )
+
+
+@router.delete("/{product_id}/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product(
+    product: Product = Depends(dependencies.get_product_by_id),
+    session: AsyncSession = Depends(db_helper.session_dependency),
+) -> None:
+    return await crud.delete_product(session=session, product=product)
