@@ -4,7 +4,6 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel, EmailStr
 from core.config import settings
-from core.models import db_helper, Base
 from items_views import router as items_router
 from users.views import router as users_router
 from api_v1 import router as router_v1
@@ -12,8 +11,6 @@ from api_v1 import router as router_v1
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with db_helper.engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
 
     yield
 
